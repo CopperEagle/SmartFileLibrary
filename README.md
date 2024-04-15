@@ -7,7 +7,7 @@
 
 The problem this project in development tries to fix are local folders full of PDFs, code snippets and datasets, that typically have very nontelling filenames (like DOI numbers).
 
-SmartFileLibrary is is an digital library, byacked by a local database hosted by PostgreSQL. It allows to organize a collection of files to constitute a virtual book under a different title and location, adding keywords, usecases and other metadata, among other things.
+SmartFileLibrary is is an digital library, backed by a local database hosted by PostgreSQL. It allows to organize a collection of files to constitute a virtual book under a different title and location, adding keywords, usecases and other metadata, among other things.
 
 The project's goal is to semiautomatically insert documents from local directories into the library. This includes LLM based analysis of documents to infer metadata and supply keywords. Semiautonomous insertion can be augmented for scientific papers using the API for the `crossref` metadata database. In the future, an AI model may be used to read off all required metadata from the PDF itself.
 
