@@ -172,7 +172,7 @@ db.finish()
 ## The DB
 The DB layout can be checked in ![setup.sql](setup.sql). It is in third normal form. Any higher was not required since no combinatoral recombination should be present. It contains the fallowing "objects":
 
-- Book: title, Publisher, etc.
+- Book: Has properties title, Publisher, etc. May represent something other than books, like a codebase.
 - File: A Book can consist of many files.
 - Publisher: depending on the use, this may be the publishing company or the author
 - Form: code, text, dataset, etc.
@@ -181,7 +181,7 @@ The DB layout can be checked in ![setup.sql](setup.sql). It is in third normal f
 
 Then, it also contains the reasonable relations:
 
-- usecase_book: Course <-> Book; many to many
+- usecase_book: UseCase <-> Book; many to many
 - book_topic: Book <-> Topic; many to many
 - subtopic_of: Topic <-> Topic; many to many
 
