@@ -63,7 +63,7 @@ The fallowing demonstrates the fully manual insertion of a publisher and a book 
 ```py
 from smartfilelibrary import DatabaseInterface
 
-
+# Enter credentials to local DB.
 db = DatabaseInterface("dbname", "user", "password")
 # remove any previous tables and insertions
 # Good practice to reset any counters.
@@ -143,7 +143,7 @@ The `preview_all` method triggers the semiautomated process. It is only *semi* b
 ```py
 from smartfilelibrary import DatabaseInterface
 
-
+# Enter credentials to local DB.
 db = DatabaseInterface("dbname", "user", "password")
 # Good practice to reset any counters.
 db.cleardb()
@@ -176,7 +176,7 @@ db.finish()
 
 
 ## The DB
-The DB layout can be checked in ![setup.sql](setup.sql). It is in third normal form. Any higher was not required since no combinatoral recombination should be present. It contains the fallowing "objects":
+The DB layout can be checked in ![setup.sql](setup.sql). It is in third normal form. It contains the fallowing "objects":
 
 - Book: Has properties title, Publisher, etc. May represent something other than books, like a codebase.
 - File: A Book can consist of many files.
@@ -201,8 +201,9 @@ The other relations like form_book, being either one-to-one or one-to-many have 
 
 
 ## TODOs
-- Tests
-- Give user direct access to the UseCase table, which is pretty useful...
+- Tests.
+- Add remote database support.
+- Give user direct access to the UseCase table, which is pretty useful.
 - Make it crossplatform by removing the pdfinfo dependency and using a Python library instead.
 - Use freely available PDF analyzing LLMs for more robust and informative output.
-- Webinterface to actually use the DB
+- Webinterface to actually use the DB.
