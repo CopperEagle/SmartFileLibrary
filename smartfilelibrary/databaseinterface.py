@@ -76,18 +76,25 @@ class DatabaseInterface:
 		with open(self.logfile, 'a') as f:
 			f.write(command + "\n")
 
-	def executefile(self, file : str):
+	def executefile(self, file : str, update_param : bool = True):
 		"""
 		Execute file containing SQL statements.
+		NOTE: May commit. See update_param.
 
 		Parameters
 		-----------
 		file : str
 			Filepath of said file.
+		update_param : bool
+			Reflect changes also onto the Python side. True unless you know what you do.
+			Setting this False and then adding new entries may corrupt your database.
+			Note: If true then this commits!
 		"""
 		with open(file, "r") as f:
 			read = "".join(f.readlines())
 		self.execute(read)
+		if update_param:
+			self._update_parameters()
 
 	def addbook(self, title : str, year : int, pub_id : int, form : str, topics : Collection[str], 
 			favorite : bool = False, addunknowntopics : bool = True) -> int: 
@@ -103,7 +110,7 @@ class DatabaseInterface:
 		pub_id : int
 			Publisher ID returned from addpublisher.
 		form : str
-			Typically one of 'book','lecture document', 'exercise',
+			One of 'book','lecture document', 'exercise',
 			'website', 'collection', 'notes', 'research article',
 			'dataset', 'code'
 		topics : collection of str
@@ -144,6 +151,29 @@ class DatabaseInterface:
 
 
 		return self.book_id
+
+	def _update_parameters(self):
+		"""
+		If you replay from a file, you must afterwards update some parameters
+		that are stored on the Python side. If you call executefile, 
+		you should call this to reflect the changes also on the Python side.
+		"""
+		self.conn.commit()
+		self.cur = self.conn.cursor()
+		self.cur.execute("SELECT COUNT(*) FROM Book;")
+		self.book_id = self.cur.fetchall()[0][0]
+		self.cur.execute("SELECT pub_id, name FROM Publisher;")
+
+		for pub_id, name in self.cur.fetchall():
+			self.publishers_added[name] = pub_id
+
+		self.pub_id = len(self.publishers_added)
+		self.cur.execute("SELECT topic_name FROM Topic;")
+
+		for t in self.cur.fetchall():
+			topic = t[0]
+			if topic not in self.topics:
+				self.topics.append(topic)
 
 	def addtopics(self, topics : Collection[str]):
 		"""
@@ -269,13 +299,26 @@ class DatabaseInterface:
 			self.cur = self.conn.cursor()
 		self.execute(self.SQLSETUP)
 
+	def cancel_transaction(self):
+		"""
+		Recovers from an error from the DB. Will revert the state to the last commit.
+		Thus, it cancels the current transaction.
+		"""
+		self.conn.cancel()
+
+	def commit_transaction(self):
+		"""
+		Commits the transaction. The equivalent of a savegame: If an error now appears,
+		the transaction is saved.
+		"""
+		self.conn.commit()
+
 	def standardsetup(self):
 		"""
 		Insert some typical values into the DB. You may check them out by
 		calling this method and then looking at the logfile.
 		"""
 		self.execute('''INSERT INTO Form (form_name) VALUES
-
 			('book'), -- ID == 1
 			('lecture document'),
 			('exercise'),
@@ -284,7 +327,7 @@ class DatabaseInterface:
 			('notes'),
 			('research article'), -- ID == 7;
 			('dataset'),
-			('code')
+			('code');
 		''')
 		self.addtopics(('Geography', 'Meteorology', 'Naval', 'Airspace',
 			'Geolocation', 'Naval Traffic', 'Air Traffic', "No-Keywords-Available-No-Title"))

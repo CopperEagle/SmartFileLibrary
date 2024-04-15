@@ -72,7 +72,10 @@ db.cleardb()
 ## Replay previous actions:
 # db.executefile(locallog.txt) 
 
-# inserts a number of standard values
+# Inserts a number of standard values.
+# Will likely throw an error if you execute from file before,
+# given that file also has seen the standardsetup.
+# TLDR: Either standardsetup or executefile.
 db.standardsetup()
 
 # Add publisher, returns ID, required for adding books
@@ -89,6 +92,9 @@ db.addfile(sqlbook, "path/to/book1.pdf", 300, "First Half")
 db.addfile(sqlbook, "path/to/book2.pdf", 349, "Second Half")
 
 # Commit all changes
+# db.commit_transaction()
+
+# Commit all changes and close connection
 db.finish()
 
 ```
