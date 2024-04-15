@@ -2,7 +2,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.10-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 ![Version](https://img.shields.io/badge/SmartFileLibrary_version-0.0.1-darkgreen)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 
 The problem this project in development tries to fix are local folders full of PDFs, code snippets and datasets, that typically have very nontelling filenames (like DOI numbers).
@@ -144,7 +144,7 @@ The `preview_all` method triggers the semiautomated process. It is only *semi* b
 from smartfilelibrary import DatabaseInterface
 
 
-db = DatabaseInterface()
+db = DatabaseInterface("dbname", "user", "password")
 # Good practice to reset any counters.
 db.cleardb()
 # inserts a number of standard values
