@@ -23,11 +23,13 @@ The project is ongoing. Some features are still in development.
 - Enhance the automated process for scientific works using the `crossref` metadata database.
 - Basic (experimental) webinterface for queries.
 
+![Screenshot of the experimental webinterface](rsc/screenshot_chrome.png)
+
 #### Future
 - Infer metadata like titles, keywords from PDF content using LLMs for analysis.
 - Improved Webinterface.
 
-![Screenshot of the experimental webinterface](rsc/screenshot_chrome_min.png)
+
 
 
 ## Installing
