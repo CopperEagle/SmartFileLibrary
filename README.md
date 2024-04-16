@@ -21,10 +21,13 @@ The project is ongoing. Some features are still in development.
 - Local database to organize the files.
 - AI generated keywords based on the *title* of the file. If the actual title cannot be inferred from the `crossref` database, the filename will be used for now.
 - Enhance the automated process for scientific works using the `crossref` metadata database.
+- Basic (experimental) webinterface for queries.
 
 #### Future
 - Infer metadata like titles, keywords from PDF content using LLMs for analysis.
-- Webinterface (GUI) for queries, etc.
+- Improved Webinterface.
+
+![Screenshot of the experimental webinterface](rsc/screenshot_chrome_min.png)
 
 
 ## Installing
@@ -173,6 +176,17 @@ add_books(db)
 db.finish()
 
 ```
+
+## Webinterface
+
+**Webinterface support is still experimental. It is in active development.**
+After executing the below, it will request the password for the user.
+```py
+python3 -m smartfilelibrary db_name user_name 
+
+```
+
+Then, you can open the ![webinterface](rsc/index.html). It has mainly been tested in Chrome.
 
 
 ## The DB

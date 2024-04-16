@@ -68,13 +68,15 @@ class DatabaseInterface:
 			SQL string to execute.
 		"""
 		self.cur.execute(command)
+		ret = None
 		try:
-			print(self.cur.fetchall())
+			ret = self.cur.fetchall()
 		except psycopg2.ProgrammingError:
 			pass
 
 		with open(self.logfile, 'a') as f:
 			f.write(command + "\n")
+		return ret
 
 	def executefile(self, file : str, update_param : bool = True):
 		"""

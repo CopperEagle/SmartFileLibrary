@@ -1,2 +1,3 @@
 crossref_commons
 psycopg2
+flask
