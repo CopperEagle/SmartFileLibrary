@@ -1,49 +1,91 @@
-async function displayResults() {
-    const queryInput = document.getElementById('query-input').value;
-    const typeInput = document.getElementById('form-dropdown').value;    
 
-    // Sample data for demonstration
-    const response = await fetch("http://localhost:5000/query?kw="+queryInput+"&t="+typeInput);
-    const sampleData = await response.json();
-    const resultsContainer = document.getElementById('results-container');
-    resultsContainer.innerHTML = ''; // Clear previous results
+        Vue.component('resultentry', {
+            props: ['entry', 'favourites'],
+            template: `
+                <div class="result-entry" @click="displayPopup">
+                    <div class="entry-left">
+                        <div class="entry-title">{{ entry.title }}</div>
+                        <div class="entry-author">{{ entry.author }}</div>
+                    </div>
+                    <div class="entry-keywords">
+                        <span v-for="keyword in entry.keywords" class="keyword">{{ keyword }}</span>
+                    </div>
+                    <span @click.stop="toggleFavourite" :class="{ 'fav-star': isFavourite, 'non-fav-star': !isFavourite }">{{ isFavourite ? '⭐' : '☆' }}</span>
+                </div>
+            `,
+            computed: {
+                isFavourite() {
+                    return this.favourites.includes(this.entry.id);
+                }
+            },
+            mounted() {
+            	const containerWidth = this.$el.offsetWidth;
+                const titleElement = this.$el.querySelector('.entry-left');
+                const titleWidth = titleElement.offsetWidth;
+                const keywordBasis = 100 - (containerWidth - titleWidth) / containerWidth; // Adjust as needed
+                // Set keywordBasis for this entry
+                this.$el.style.setProperty('--keyword-basis', `${keywordBasis}%`);
+                if (this.entry.favourite){
+                	this.favourites.push(this.entry.id);
+                }
+            
+            },
+            methods: {
+                toggleFavourite() {
+                    this.$emit('toggle-favourite', this.entry);
+                },
+                displayPopup() {
+                    this.$emit('display-popup', this.entry);
+                }
+            }
+        });
 
-    sampleData.forEach(entry => {
-        const resultEntry = document.createElement('div');
-        resultEntry.className = 'result-entry';
-                
-                            
-        resultEntry.innerHTML = `
-            <div class="entry-left">
-                <div class="entry-title">${entry.title}</div>
-                <div class="entry-author">${entry.author}</div>
-            </div>
-            <div class="entry-keywords">
-                ${entry.keywords.map(keyword => `<span class="keyword">${keyword}</span>`).join(' ')}
-            </div>
-            <span class="${entry.favourite ? 'fav-star' : 'non-fav-star'}" onclick="toggleFavourite(this)">${entry.favourite ? '⭐' : '☆'}</span>
-        `;
-         // Calculate keywordBasis for each entry
-        const containerWidth = resultsContainer.offsetWidth;
-        const titleElement = resultEntry.querySelector('.entry-left');
-        const titleWidth = titleElement.offsetWidth;
-        const keywordBasis = 100 - (containerWidth - titleWidth)/containerWidth;// - 200; // Adjust as needed
-                
-        // Set keywordBasis for this entry
-        resultEntry.style.setProperty('--keyword-basis', `${keywordBasis}%`);
-   
-        resultsContainer.appendChild(resultEntry);
-    });
-}
-        
-function toggleFavourite(starElement) {
-    starElement.classList.toggle('fav-star');
-    starElement.classList.toggle('non-fav-star');
-    starElement.innerHTML = starElement.classList.contains('fav-star') ? '⭐' : '☆';
-}
+        const app = new Vue({
+            el: '#app',
+            data: {
+                query: '',
+                type: 'all',
+                results: [],
+                popupVisible: false,
+                popupContent: {
+                    title: '',
+                    author: '',
+                    keywords: []
+                },
+                favourites: []
+            },
+            methods: {
+                displayResults() {
+                    const queryUrl = `http://localhost:5000/query?kw=${encodeURIComponent(this.query)}&form=${this.type}`;
+                    fetch(queryUrl)
+                        .then(response => response.json())
+                        .then(data => {
+                            this.results = data;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching data:', error);
+                        });
+                },
+                toggleFavourite(entry) {
+                    const index = this.favourites.indexOf(entry.id);
+                    if (index !== -1) {
+                        this.favourites.splice(index, 1);
+                        const queryUrl = `http://localhost:5000/set_fav?id=${entry.id}&val=0`;
+                    	fetch(queryUrl);
+                    } else {
+                        this.favourites.push(entry.id);
+                        const queryUrl = `http://localhost:5000/set_fav?id=${entry.id}&val=1`;
+                    	fetch(queryUrl);
+                    }
+                },
+                displayPopup(entry) {
+                    
+                    this.popupContent = entry;
+                    this.popupVisible = true;
+                },
+                hidePopup() {
+                    this.popupVisible = false;
+                }
+            }
+        });
 
-async function inputPressEnter(event) {
-    if (event.key == "Enter") {
-        displayResults()
-    }
-}

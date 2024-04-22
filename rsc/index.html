@@ -6,189 +6,43 @@
     <meta http-equiv="Access-Control-Allow-Origin" content="*">
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';">
     <title>SmartFileLibrary - Database Interface</title>
-    <style>
-        body {
-            height:100%;
-            font-family: Arial, sans-serif;
-            background-color: linear-gradient(to right, #006699, #3399cc);
-            background: linear-gradient(to right, #006699, #3399cc);
-            background: -moz-linear-gradient(to right, #006699, #3399cc);
-            background: -webkit-gradient(linear, left, right, #006699, #3399cc);
-            background: -webkit-linear-gradient(left, right, #006699, #3399cc);
-        }
-        #query-box {
-            background-color: #ababab00 !important;
-            position: absolute;
-            top: 20px;
-            height: 40px;
-            width: 70%;
-            left: 60%;
-            transform: translateX(-50%);
-            background-color: #fff;
-            padding: 10px;
-            border-radius: 5px;
-            flex-direction : column;
-            align-items : flex-start;
-        }
-        #form-dropdown{
-        	border: 2px solid black;
-		    border-radius: 5px;
-        	height: 140% !important;
-        	width: 10% !important;
-        }
-        #query-box input[type=text] {
-	        width: 50%;
-	        height: 80%;
-	        border: 2px solid black;
-	        border-radius: 5px;
-	        padding: 10px;
-	        font-size: 18px;
-		}
-		#query-box button {
-		    border: 2px solid black;
-		    border-radius: 5px;
-		    width:10%;
-		    height:135%;
-		    padding: 10px;
-		    font-size: 18px;
-		}
-        #results-container {
-            position: absolute;
-            top: 20%;
-            bottom: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            border: 2px solid black;
-            overflow-y: scroll;
-            /*height: 400px;*/
-            width: 80%;
-        }
-        .result-entry {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 15px;
-            border-bottom: 1px solid #ccc;
-        }
-        .result-entry:last-child {
-            border-bottom: none;
-        }
-        .entry-left {
-            display: flex;
-            flex-direction: column;
-            min-width: 50%;
-        }
-        .entry-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-            position: relative;
-        }
-        .entry-author {
-            font-style: italic;
-            margin-bottom: 5px;
-        }
-        .entry-keywords {
-            display: flex;
-            flex-wrap: wrap; /*-reverse */
-            margin-top: 10px;
-            /* Use CSS variable for flex-basis */
-            flex-basis: var(--keyword-basis);
-            min-width: 200px;
-            justify-content: flex-end;
-        }
-        .keyword {
-            background-color: #3399cc;
-            color: #fff;
-            padding: 2px 5px;
-            margin: 2px;
-            border-radius: 3px;
-        }
-        .fav-star {
-            padding: 10px;
-            color: gold;
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
-        .non-fav-star {
-            padding: 10px;
-            color: gray;
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body onload="displayResults()">
-    <div id="query-box">
-    	<select id="form-dropdown">
-        	<option value="all">All</option>
-        	<option value="books">Books (TBD)</option>
-        	<option value="all">TBD</option>
-        </select>
-        <input onkeypress="inputPressEnter(event)" type="text" id="query-input" placeholder="Enter your keyword or '*' for wildcard">
-        <button onclick="displayResults()">🔍</button>
+<body>
+    <div id="app">
+        <div id="query-box">
+            <select id="form-dropdown" v-model="type">
+                <option value="all">All</option>
+                <option value="book">Book</option>
+                <option value="website">Website</option>
+                <option value="data">Dataset</option>
+                <option value="code">Code</option>
+                <option value="collection">Collection</option>
+                <option value="research article">Research Article</option>
+            </select>
+            <input v-model="query" @keyup.enter="displayResults" type="text" id="query-input" placeholder="Enter your keyword or '*' for wildcard">
+            <button @click="displayResults">🔍</button>
+        </div>
         
+        <div id="results-container">
+            <resultentry class="result-entry" v-for="entry in results" :entry="entry" :favourites="favourites" :key="entry.id" @toggle-favourite="toggleFavourite" @display-popup="displayPopup"></resultentry>
+        </div>
+        
+        <div id="popup" v-if="popupVisible" class="popup">
+            <div id="popup-content">
+                <h2>{{ popupContent.title }}</h2>
+                <p>Author: {{ popupContent.author }}</p>
+                <p v-if="popupContent.keywords">Keywords: {{ popupContent.keywords.join(', ') }}</p>
+                <button id="cancel-button"  @click="hidePopup">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <div id="disclaimer">
+    	© SmartFileLibrary v0.0.1. This project is in active devlopment.
     </div>
     
-    <div id="results-container">
-        <!-- Results will be displayed here -->
-    </div>
-    
-    <script>
-        async function displayResults() {
-            const queryInput = document.getElementById('query-input').value;
-            const typeInput = document.getElementById('form-dropdown').value;
-            
-            // Sample data for demonstration
-            const response = await fetch("http://localhost:5000/query?kw="+queryInput);
-            const sampleData = await response.json();
-            
-            const resultsContainer = document.getElementById('results-container');
-            resultsContainer.innerHTML = ''; // Clear previous results
-            
-            sampleData.forEach(entry => {
-                const resultEntry = document.createElement('div');
-                resultEntry.className = 'result-entry';
-                
-                            
-                resultEntry.innerHTML = `
-                    <div class="entry-left">
-                        <div class="entry-title">${entry.title}</div>
-                        <div class="entry-author">${entry.author}</div>
-                    </div>
-                    <div class="entry-keywords">
-                        ${entry.keywords.map(keyword => `<span class="keyword">${keyword}</span>`).join(' ')}
-                    </div>
-                    <span class="${entry.favourite ? 'fav-star' : 'non-fav-star'}" onclick="toggleFavourite(this)">${entry.favourite ? '⭐' : '☆'}</span>
-                `;
-                 // Calculate keywordBasis for each entry
-                const containerWidth = resultsContainer.offsetWidth;
-                const titleElement = resultEntry.querySelector('.entry-left');
-                const titleWidth = titleElement.offsetWidth;
-                const keywordBasis = 100 - (containerWidth - titleWidth)/containerWidth;// - 200; // Adjust as needed
-                
-                // Set keywordBasis for this entry
-                resultEntry.style.setProperty('--keyword-basis', `${keywordBasis}%`);
-   
-                resultsContainer.appendChild(resultEntry);
-            });
-        }
-        
-        function toggleFavourite(starElement) {
-            starElement.classList.toggle('fav-star');
-            starElement.classList.toggle('non-fav-star');
-            starElement.innerHTML = starElement.classList.contains('fav-star') ? '⭐' : '☆';
-        }
-
-        async function inputPressEnter(event) {
-            if (event.key == "Enter") {
-                displayResults()
-            }
-        }
-
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="run.js"></script>
     <noscript>No Js...</noscript>
 </body>
 </html>

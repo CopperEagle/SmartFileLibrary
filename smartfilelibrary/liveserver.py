@@ -1,11 +1,29 @@
-"""Provides the server for the webinterface."""
+"""Provides the REST server for the webinterface."""
 import sys
 from getpass import getpass
-from flask import Flask, request
+from flask import Flask, request, jsonify
 
 from .databaseinterface import DatabaseInterface
  
 app = Flask(__name__)
+
+
+def get_argument(arg : str):
+    """Get argument from the most recent request. 
+    Returns empty string if not available.
+
+    Parameter
+    ----------
+    arg : str
+        The argument from the request.
+    """
+    query = None
+    try:
+        query = request.args.get(arg)
+    except:
+        pass
+    query = "" if query is None else query
+    return query
 
 @app.after_request
 def add_header(response):
@@ -13,22 +31,47 @@ def add_header(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
     return response
 
+
+@app.route('/set_fav')
+def set_fav():
+    """
+    Update the favourite status using the web interface.
+    Done as GET method for convenience.
+    """
+    global db
+    fav = get_argument("val")
+    bid = get_argument("id")
+    value = "false"
+    if fav == "1":
+        value = "true"
+    db.execute(
+        f"""UPDATE Book
+        SET favorite = {value}
+        WHERE book_id = {bid};"""
+        )
+    return ""
+
+
 @app.route('/query')
-def entry():
+def query_db():
     """Query main entry point."""
     global db # need to be explicit with flask
-    query = ""
-    form = "all"
-    try:
-        query = request.args.get("kw")
-    except:
-        pass
-    if query is None:
-        query = ""
-
-    res = db.execute(
-        """SELECT book_id, title, name, favorite FROM Book JOIN Publisher USING(pub_id);"""
-        )
+    query = get_argument("kw")
+    form = get_argument("form")
+    
+    if form == "all":
+        res = db.execute(
+            """SELECT book_id, title, name, favorite 
+            FROM Book JOIN Publisher USING(pub_id);"""
+            )
+    else:
+        res = db.execute(
+            f"""SELECT book_id, title, name, favorite 
+            FROM Book 
+            JOIN Publisher USING(pub_id)
+            JOIN Form USING(form_id)
+            WHERE form_name = '{form}';"""
+            )
     ret = []
     for bid, title, pubname, fav in res:
         res = db.execute(
@@ -41,6 +84,7 @@ def entry():
 
         ret.append(
             {
+            "id" : bid,
             "title" : title,
             "author" : ("published by " + pubname).title(),
             "keywords" : tps,
@@ -53,7 +97,8 @@ def entry():
             "keywords" : [],
             "favourite" : False
             }]
-    return ret
+    return jsonify(ret)
+
 
 def main():
     """Main loop for the server."""
