@@ -1,4 +1,4 @@
-# <img src="rsc/icon.svg" width="60px"> SmartFileLibrary
+# <img src="rsc/icon.svg" width="30px"> SmartFileLibrary
 
 [![Python](https://img.shields.io/badge/Python-3.10-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 ![Version](https://img.shields.io/badge/SmartFileLibrary_version-0.0.1-darkgreen)
