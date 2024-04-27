@@ -4,8 +4,9 @@ import os
 import pickle
 from typing import Collection
 
-from .crossref_db import getDB
 from .utilities import get_books, write_actions_to_db
+from .analyzers.donut_base_finetuned import DonutAnalyzer
+from .analyzers.pdfmetaanalyzer import PdfMetaAnalyzer
 
 import psycopg2
 try:
@@ -26,7 +27,7 @@ class DatabaseInterface:
 	"""Interfaces with a database and will make sure that all actions are committed. Furthermore,
 	it will log all that has been executed such that mistakes can be undone by redoing everything."""
 	MAXOUTPUTLENGTH = 2048
-	MAXENTRYCROSSREF = 240000
+	
 
 	def __init__(self, dbname : str = "library", user : str = "user", password : str = "pw"):
 		"""This is the constructor.
@@ -46,7 +47,13 @@ class DatabaseInterface:
 		user=user,
 		password=password)
 		self.cur = self.conn.cursor()
+		self.username = user
 		self.logfile = "locallog.txt"
+		self.metadata_extraction_methods = {
+			1: PdfMetaAnalyzer,
+			2: DonutAnalyzer
+		}
+		self.md_extractor = None
 
 
 		self.publishers_added = {}
@@ -57,6 +64,34 @@ class DatabaseInterface:
 			'website' : 4, 'collection' : 5, 'notes' : 6, 'research article' : 7, 
 			'data' : 8, 'code' : 9}
 		self.topics = []
+
+	def set_metadata_method(self, method : int, **kwargs):
+		"""
+		Set how to extract the metadata of the document. This includes things
+		like author, title, publisher amon other things. This does NOT include
+		keywords.
+
+		Parameter:
+		-----------
+		method: int
+			Either 1 for using the metadata of the file itself (analyzers.PdfMetaAnalyzer)
+			or 2 for using a donut AI model (analyzers.DonutAnalyzer).
+
+		Examples:
+		------------
+		# fetch Crossref DB, set publisher
+		set_metadata_method(1, fetch_metadb = True, publisher = "mypublisher")
+
+		# use donut model
+		set_metadata_method(2)
+		"""
+		if method not in (1, 2):
+			raise ValueError(f"Bad metadata method extractor {method}. Check documentation.")
+		self.md_extractor = self.metadata_extraction_methods[method](**kwargs)
+		self.md_extractor.load()
+
+	def get_username(self):
+		return self.username
 
 	def execute(self, command : str):
 		"""
@@ -366,21 +401,11 @@ class DatabaseInterface:
 		fetch_metadb : bool
 			Whether to try to fetch the metadata DB from crossref.
 		"""
-		dbname = f"{ pub.replace(' ', '_') }_crossref_mdb.dump"
-		if not os.path.exists(dbname) and fetch_metadb:
-			db = getDB(pub, formtype="book", max_results = self.MAXENTRYCROSSREF)
-			with open(dbname, "wb") as f:
-				pickle.dump(db, f)
-		elif not getDB:
-			db = []
-		else:
-			print("[Info] Found previous metadata DB. Loading.")
-			with open(dbname, "rb") as f:
-				db = pickle.load(f)
-			print("[Info] Loading metadata DB done.")
-		pub_id = self.addpublisher(pub)
-		books = get_books(filesdir, db, self._chat)
-		write_actions_to_db(books, to_file, pub_id, filesdir)
+		if (self.md_extractor is None):
+			raise ValueError("Must set metadata extraction method first before calling preview_all")
+		
+		books = get_books(filesdir, self.md_extractor, self._chat)
+		write_actions_to_db(books, to_file, filesdir, self)
 
 	def _chat(self, inp : str):
 		return ""

@@ -6,32 +6,14 @@ import pickle
 import time
 from typing import Union, Callable, Collection, Tuple
 
+from tqdm import tqdm
+
+from .analyzers.donut_base_finetuned import BaseDocumentAnalyzer
+
 SEARCHMETHOD = "ISBN"
 DIGIT_AT_END = r"(.*) [0-9]+$"
 
-def _search(pth : str, metalib : list) -> Union[None, dict]:
-	"""Search for the publication within the metadata db.
-
-	Parameters
-	-----------
-	pth : str
-		The path of the book (pdf) in question.
-	metalib : list
-		The metadata db from crossref.
-	"""
-	isbn = pth.split(".")[0].replace("-", "")
-	for book in metalib:
-		try:
-			if isinstance(book['ISBN'], list):
-				if isbn in book['ISBN']:
-					return book
-			elif book['ISBN'] == isbn:
-				return book
-		except KeyError:
-			pass
-	return None
-
-def get_books(directory : str, metalib : list, 
+def get_books(directory : str, metadata_extractor : BaseDocumentAnalyzer,
 	chat : Callable[str, str]) -> Collection[Tuple[str, str, list, Union[dict, None]]]:
 	"""
 	Get the books from the given directory. Will try to retreive the title,
@@ -49,15 +31,13 @@ def get_books(directory : str, metalib : list,
 	what = os.listdir(directory)
 	bookannotated = []
 
-	for book in what:
-		libbk = _search(book, metalib)
-		try:
-			title = libbk['title'][0]
-		except KeyError:
-			libbk = None
-			title = book
-		except TypeError:
-			title = book
+	for bookfilename in tqdm(what, desc="Analyzing books"):
+		metadata_extractor.analyze(os.path.join(directory, bookfilename))
+		
+		title = metadata_extractor.get_title()
+		numpages = metadata_extractor.get_pagecount()
+		publisher = metadata_extractor.get_publisher()
+		year = metadata_extractor.get_publishing_year()
 
 		answer = chat(f"Please give keywords what sciences this book is about: '{title}'")
 		time.sleep(1)
@@ -79,27 +59,9 @@ def get_books(directory : str, metalib : list,
 				del answer[i]
 		#print(f"{title} : {answer}")
 
-		bookannotated.append((title, book, answer, libbk))
+		bookannotated.append((title, bookfilename, answer, publisher, year, numpages))
 
 	return bookannotated
-
-
-def _getnumpages(path : str) -> int:
-	"""Retreive the number of pages for this pdf.
-
-	Parameters
-	-----------
-	path : str
-		The path of the book (pdf) in question.
-	"""
-	os.system(f"pdfinfo {path} > local_quick_pdf_pylib_analysis0453454.txt")
-	with open("local_quick_pdf_pylib_analysis0453454.txt", "r") as f:
-		a = f.readlines()
-	
-	os.remove("local_quick_pdf_pylib_analysis0453454.txt")
-	for i in a:
-		if i.startswith("Pages:"):
-			return int(i.split(":")[1].strip())
 
 
 def _cleankeywords(kws : Collection[str]) -> Collection[str]:
@@ -127,7 +89,7 @@ def _cleankeywords(kws : Collection[str]) -> Collection[str]:
 	return kws
 
 def write_actions_to_db(books : Collection[Tuple[str, str, list, Union[dict, None]]],
-		 result_file : str, pub_id : int, filesdir : str) -> None:
+		 result_file : str, filesdir : str, dbinstance) -> None:
 	"""
 	Write actions into Python file.
 
@@ -143,25 +105,16 @@ def write_actions_to_db(books : Collection[Tuple[str, str, list, Union[dict, Non
 		The directory for the files in question.
 	"""
 	with open(result_file, "w") as f:
-		f.write(f"def add_books(db):\n\tpublisher = {pub_id}\n")
-		for (title, path, answer, meta) in books:
-			fullpath = os.path.join(filesdir, path)
-			year = None
+		f.write(f"def add_books(db):\n")
+		for (title, bookfilename, answer, publisher, year, numpages) in books:
+			fullpath = os.path.join(filesdir, bookfilename)
 			answer = list(set(_cleankeywords(answer)))
-			try:
-				year = meta['created']['date-parts'][0][0]
-			except:
-				pass
-			try:
-				year = meta['issued']['date-parts'][0][0]
-			except:
-				pass
-			try:
-				year = meta['published']['date-parts'][0][0]
-			except:
-				pass
 
-			insert = f"""\tbook_id = db.addbook('{title}', {year}, publisher, 'book', """ + \
-			f"""{answer})\n\tdb.addfile(book_id, "{fullpath}", {_getnumpages(fullpath)})\n\n"""
+			f.write(f"\t# Set publisher as '{publisher}':\n")
+			f.write(f"\tpublisher_id = db.addpublisher('{publisher}')\n")
+			
+			insert = "\t# book_id = db.addbook(title (not filepath!), year, publisher_id, form, keywords)\n"
+			insert += f"""\tbook_id = db.addbook('{title}', {year}, publisher_id, 'book', """ + \
+			f"""{answer})\n\tdb.addfile(book_id, "{fullpath}", {numpages})\n\n"""
 
 			f.write(insert)

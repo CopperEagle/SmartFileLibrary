@@ -1,0 +1,5 @@
+config = {
+
+	"DEBUG" : True
+
+}
