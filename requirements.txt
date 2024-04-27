@@ -1,3 +1,8 @@
 crossref_commons
 psycopg2
 flask
+tqdm
+torch
+transformers
+pymupdf
+pillow
