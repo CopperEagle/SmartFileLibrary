@@ -11,6 +11,9 @@ SmartFileLibrary is is an digital library, backed by a local database hosted by 
 
 To strengthen privacy, the project strives to always offer local compute options.
 
+![Screenshot of the experimental webinterface](rsc/screenshot_chrome.png)
+
+
 ## Features
 
 The project is ongoing. Some features are still in development.
@@ -21,8 +24,6 @@ The project is ongoing. Some features are still in development.
 - AI generated keywords based on the *title* of the file.
 - Enhance the automated process for scientific works using the `crossref` metadata database.
 - Basic (experimental) webinterface for queries. The project has a coding first mentality. To get all features, you need to code in Python. The GUI is seperated in [here](rsc/).
-
-![Screenshot of the experimental webinterface](rsc/screenshot_chrome.png)
 
 #### Ongoing work
 - Include more models for metadata inference. At the top of the list is [Idefics2-8b](https://huggingface.co/HuggingFaceM4/idefics2-8b): **It's performance is remarkable** for an open source visual model this size.
