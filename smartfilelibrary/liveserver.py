@@ -1,5 +1,7 @@
 """Provides the REST server for the webinterface."""
+import os
 import sys
+import signal
 from getpass import getpass
 from flask import Flask, request, jsonify
 
@@ -30,6 +32,28 @@ def add_header(response):
     """Add CORS header."""
     response.headers['Access-Control-Allow-Origin'] = '*'
     return response
+
+@app.route('/status')
+def get_status():
+    """Send status."""
+    return jsonify({"status":"running"})
+
+@app.route('/dbmeta')
+def get_dbmeta():
+    """Get metadata about the library. So far, it only accepts
+    ?key=user to return the username."""
+    global db
+    if get_argument("key") == "user":
+        return jsonify(db.get_username())
+
+@app.route('/turnoff')
+def shutdown():
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is None:
+        os.kill(os.getpid(), signal.SIGINT)
+    else:
+        func()
+    return ""
 
 
 @app.route('/set_fav')
