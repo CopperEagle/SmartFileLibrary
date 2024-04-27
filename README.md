@@ -1,4 +1,4 @@
-# SmartFileLibrary
+# <img src="rsc/icon.svg" width="60px"> SmartFileLibrary
 
 [![Python](https://img.shields.io/badge/Python-3.10-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 ![Version](https://img.shields.io/badge/SmartFileLibrary_version-0.0.1-darkgreen)
@@ -145,3 +145,7 @@ The other relations like form_book, being either one-to-one or one-to-many have 
 - Currently, this project can only do scientific publications fully automatically, thanks to the crossref metadata database and its free API access. These shortcommings could be reduced in the future by having AI models search the PDF for metadata like title, publisher, author, publishing year, etc.
 
 - There is currently no option to use the ChatGPT API but this may be added in the future. This is currently not a priority since the goal is to rul locally as much as possible.
+
+## Attribution
+
+The icon is by [Afif Fudin](https://www.freepik.com/icon/folder_9781948#fromView=search&page=1&position=26&uuid=47366e51-b4a5-457f-af37-a0deac6c18d7)
