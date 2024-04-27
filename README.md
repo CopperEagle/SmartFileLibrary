@@ -7,11 +7,9 @@
 
 The problem this project in development tries to fix are local folders full of PDFs, code snippets and datasets, that typically have very nontelling filenames (like DOI numbers).
 
-SmartFileLibrary is is an digital library, backed by a local database hosted by PostgreSQL. It allows to organize a collection of files to constitute a virtual book under a different title and location, adding keywords, usecases and other metadata, among other things.
+SmartFileLibrary is is an digital library, backed by a local database hosted by PostgreSQL. The project's goal is to semiautomatically insert documents from local directories into the library. This includes LLM based analysis of documents to infer metadata and supply keywords. Semiautonomous insertion can be augmented for scientific papers using the API for the `crossref` metadata database.
 
-The project's goal is to semiautomatically insert documents from local directories into the library. This includes LLM based analysis of documents to infer metadata and supply keywords. Semiautonomous insertion can be augmented for scientific papers using the API for the `crossref` metadata database. In the future, an AI model may be used to read off all required metadata from the PDF itself.
-
-To strengthen privacy, the project focuses on running as much functionality *locally* as possible.
+To strengthen privacy, the project strives to always offer local compute options.
 
 ## Features
 
@@ -19,16 +17,18 @@ The project is ongoing. Some features are still in development.
 
 #### Currently available
 - Local database to organize the files.
-- AI generated keywords based on the *title* of the file. If the actual title cannot be inferred from the `crossref` database, the filename will be used for now.
+- Multiple options to infer metadata like title and publishing year from the document. Includes locally deployed AI models.
+- AI generated keywords based on the *title* of the file.
 - Enhance the automated process for scientific works using the `crossref` metadata database.
-- Basic (experimental) webinterface for queries.
+- Basic (experimental) webinterface for queries. The project has a coding first mentality. To get all features, you need to code in Python. The GUI is seperated in [here](rsc/).
 
 ![Screenshot of the experimental webinterface](rsc/screenshot_chrome.png)
 
-#### Future
-- Infer metadata like titles, keywords from PDF content using LLMs for analysis.
-- Improved Webinterface.
-
+#### Ongoing work
+- Include more models for metadata inference. At the top of the list is [Idefics2-8b](https://huggingface.co/HuggingFaceM4/idefics2-8b): **It's performance is remarkable** for an open source visual model this size.
+- Support common APIs like ChatGPT-V, Claude, etc.
+- Add more features to the webinterface.
+- Tests
 
 
 
@@ -36,7 +36,6 @@ The project is ongoing. Some features are still in development.
 The project is written for Linux, Python 3.10+ and has a number of additional requirements
 
 - PostgreSQL 14.11
-- pdfinfo 22.02 for basic PDF metadata
 - (optionally, see below) a text-to-text model from Huggingface to generate keywords
 
 Optionally, you may setup a virtual environment.
@@ -74,7 +73,7 @@ db = DatabaseInterface("dbname", "user", "password")
 # Good practice to reset any counters.
 db.cleardb()
 
-## Replay previous actions:
+## If you clear, you may want to replay previous actions:
 # db.executefile(locallog.txt) 
 
 # Inserts a number of standard values.
@@ -110,74 +109,7 @@ Now this all seems pretty boring to do, right? We may want to speed this process
 
 ### Semiautomated process
 
-The process takes a directory and a publisher name (string, may be empty), and then writes all entries as a **function in a python file**. This allows the user to check the entries that are to be added to make sure all additions meet expectations.
-
-For *scientific literature*, this process is augmented with the `crossref` public metadata database. **The assumption currently is that the file's name is its own ISBN.** It can then retreive the actual title, publishing year, etc. If it is *not* scientific literature, then it will currently default to using filenames in the directory as titles. An LLM will be optionally used to infer keywords from the title. 
-
-
-#### Step 1 (optional): Setup LLM model
-
-The current version of this software infers keywords from the title. If the title from the crossref library is not available, then it will use the filename, which may not be helpful. Currently, a **locally run** AI model is used. The fallowing sets up a small (~ 3.2GB) but relatively capable model from Huggingface. You can use a different model, given you can use it with the `pipeline` function from `transformers`. For the time being, APIs like the one for ChatGPT are not yet allowed.
-
-First, we need the transformers library:
-
-```bash
-pip3 install transformers==4.34.0
-
-```
-
-Then, we need to install the model locally. The model is being sharded to allow smooth loading and running in standard 8 GB RAM environments. Also, safetensors are being used.
-
-```py
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-from transformers import pipeline
-
-tokenizer = AutoTokenizer.from_pretrained("MBZUAI/LaMini-Flan-T5-783M")
-tokenizer.save_pretrained("./tokenizer")
-
-model = AutoModelForSeq2SeqLM.from_pretrained("MBZUAI/LaMini-Flan-T5-783M", revision="refs/pr/6", use_safetensors=True)
-model.save_pretrained("./model", max_shard_size="200MB")
-```
-
-Doing it this way allows to avoid redownloading the model while also not having it hidden in some shadowy cache directory. You only need to execute the above once.
-
-#### Step 2: Semiautomated Process
-
-The `preview_all` method triggers the semiautomated process. It is only *semi* because no actual actions are performed on the DB. Instead, the actions are written into a Python file. You may then take a look, check and modify. Execute the function once you agree.
-
-```py
-from smartfilelibrary import DatabaseInterface
-
-# Enter credentials to local DB.
-db = DatabaseInterface("dbname", "user", "password")
-# Good practice to reset any counters.
-db.cleardb()
-# inserts a number of standard values
-db.standardsetup()
-
-# Add publisher
-apress = db.addpublisher("Apress")
-
-# Add topics and subtopics
-db.subtopic('Data Science', 'Database')
-db.subtopic('Database', 'SQL')
-
-db.set_keywords_model(model="./model", tokenizer="./tokenizer")
-
-# Automate book entry from said directory and publisher
-# Write potential changes into preview_db.py
-db.preview_all("this/directory", "Arxiv", "preview_db.py")
-
-# Now, there should be a file called preview_db.py with a function.
-# This will add entries to the db in the above (manual) style.
-# Proceed, if you agree with the output:
-from preview_all import add_books
-add_books(db)
-
-# Commit all changes
-db.finish()
-
-```
+The tutorial for the semiautomated process was moved into its own file [here](TUTORIAL_SEMIAUTO.md).
 
 ## Webinterface
 
@@ -187,8 +119,7 @@ After executing the below, it will request the password for the user.
 python3 -m smartfilelibrary db_name user_name 
 
 ```
-
-Then, you can open the ![webinterface](rsc/index.html). It has mainly been tested in Chrome.
+Then, you can open the ![webinterface](rsc/index.html). It has mainly been tested in Chrome and Firefox.
 
 
 ## The DB
@@ -214,12 +145,3 @@ The other relations like form_book, being either one-to-one or one-to-many have 
 - Currently, this project can only do scientific publications fully automatically, thanks to the crossref metadata database and its free API access. These shortcommings could be reduced in the future by having AI models search the PDF for metadata like title, publisher, author, publishing year, etc.
 
 - There is currently no option to use the ChatGPT API but this may be added in the future. This is currently not a priority since the goal is to rul locally as much as possible.
-
-
-## TODOs
-- Tests.
-- Add remote database support.
-- Give user direct access to the UseCase table, which is pretty useful.
-- Make it crossplatform by removing the pdfinfo dependency and using a Python library instead.
-- Use freely available PDF analyzing LLMs for more robust and informative output.
-- Webinterface to actually use the DB.
