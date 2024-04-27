@@ -42,7 +42,7 @@
             <hr>
             <ul class="nav nav-pills flex-column mb-auto">
               <li class="nav-item">
-                <a onclick="doswitch()" href="index.html" class="nav-link active" aria-current="page">
+                <a onclick="doswitch()" href="index.html" class="nav-link text-black" aria-current="page">
                   <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#home"/></svg>
                   Home
                 </a>
@@ -54,7 +54,7 @@
                 </a>
               </li>
               <li>
-                <a onclick="doswitch()" href="doc_analysis.html" class="nav-link text-black">
+                <a onclick="doswitch()" href="doc_analysis.html" class="nav-link active">
                   <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#table"/></svg>
                   Document Analysis
                 </a>
@@ -99,32 +99,117 @@
             <path fill-rule="evenodd" d="M2.5 11.5A.5.5 0 0 1 3 11h10a.5.5 0 0 1 0 1H2a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 7h10a.5.5 0 0 1 0 1H2a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 3h10a.5.5 0 0 1 0 1H2a.5.5 0 0 1-.5-.5z"/>
           </svg>
         </button>
-        <div id="query-box">
-            <select id="form-dropdown" v-model="type">
-                <option value="all">All</option>
-                <option value="book">Book</option>
-                <option value="website">Website</option>
-                <option value="data">Dataset</option>
-                <option value="code">Code</option>
-                <option value="collection">Collection</option>
-                <option value="research article">Research Article</option>
-            </select>
-            <input v-model="query" @keyup.enter="displayResults" type="text" id="query-input" placeholder="Enter your keyword or '*' for wildcard">
-            <button @click="displayResults">🔍</button>
+        <div id="page-info-container">
+          <div id="page-info-padding"></div>
+          <div id="page-info-content">
+            <br>
+            <h1><b> Document Analysis </b></h1>
+            <b> NOTE: SETTING THE MODEL VIA GUI IS NOT YET SUPPORTED. This project is in active development. Please stand by or help by contributing! </b>
+            <hr>
+            <h2> Metadata Inference </h2>
+            <hr>
+            <p> The fallowing allows you to reconfigure, how <b> metadata </b> about your documents is inferred. This includes title, author, publisher.
+              <br><br>
+              <div class="accordion" id="accordionExample">
+
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                      <span id="metadata-usage-field-1"> ✅ &ensp;</span>PDF metadata &emsp; 
+                      <div class="settings-info-badge">
+                        <span class="badge rounded-pill bg-success text-light">efficient</span> 
+                        <span> &ensp; </span>
+                        <span class="badge rounded-pill bg-warning text-dark">unreliable</span>
+                      </div>
+                    </button>
+                  </h2>
+                  <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                      This option infers the title, etc. based only on the PDF's metadata. It is important to check back to see the output before committing the changes to the library. While efficient, this method is approximate. There are likely mistakes. <br><br>
+
+                      Optionally, this process can be augmented with the Crossref database. This only works for scientific documents. The assumption is that the PDF is named after the ISBN for now. That way, it can look up the relevant information.
+                      <br><br>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="useCrossRefCheck">
+                        <label class="form-check-label" for="flexCheckDefault">
+                          Use crossref to look up metadata.
+                        </label>
+                      </div>
+                      <br><br>
+                      <button type="button" onclick="setMetadataModel(1);" class="btn btn-success">Enable</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="headingTwo">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                      <span id="metadata-usage-field-2">   </span>Donut model &emsp;
+                      <div class="settings-info-badge">
+                        <span class="badge rounded-pill bg-success text-light"> efficient </span> 
+                        <span> &ensp; </span>
+                        <span class="badge rounded-pill bg-warning text-dark">incomplete</span>
+                      </div>
+                    </button>
+                  </h2>
+                  <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                      This uses a <a href="https://huggingface.co/naver-clova-ix/donut-base-finetuned-docvqa"> donut model finetuned on DocVQA.</a>.
+                      It's peak memory usage is around 3 GB. However, it is fairly inaccurate and struggles with information that is written accross multiple lines. If possible, it is recommended to use the Idefics 2 model. See next option.
+                      <br><br>
+                      <button type="button" onclick="setMetadataModel(2);" class="btn btn-success">Enable</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="headingThree">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                      <span> &ensp;  </span>Idefics2-8b model &emsp;
+                      <div class="settings-info-badge">
+                        <span class="badge rounded-pill bg-success text-light">accurate</span> 
+                        <span> &ensp; </span>
+                        <span class="badge rounded-pill bg-warning text-dark">high compute</span>
+                      </div>
+                    </button>
+                  </h2>
+                  <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                      This is the best open source option right now. This option is in development. Please stand by.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="headingFour">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                      <span> &ensp;  </span>ChatGPT-V &emsp;
+                      <div class="settings-info-badge">
+                        <span class="badge rounded-pill bg-success text-light">accurate</span> 
+                        <span> &ensp; </span>
+                        <span class="badge rounded-pill bg-warning text-dark">costs $$$</span>
+                        <span> &ensp; </span>
+                        <span class="badge rounded-pill bg-warning text-dark"> privacy </span>
+                      </div>
+                    </button>
+                  </h2>
+                  <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                      The option is not yet supported.
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              <br><br>
+            <h2>  Keywords inference </h2>
+            <hr>
+            <p> This is how the keywords are inferred. This option cannot be modified yet.
+          </div>
+          <div id="page-info-padding-right"></div>
+            
         </div>
         
-        <div id="results-container">
-            <resultentry class="result-entry" v-for="entry in results" :entry="entry" :favourites="favourites" :key="entry.id" @toggle-favourite="toggleFavourite" @display-popup="displayPopup"></resultentry>
-        </div>
-        
-        <div id="popup" v-if="popupVisible" class="popup">
-            <div id="popup-content">
-                <h2>{{ popupContent.title }}</h2>
-                <p>Author: {{ popupContent.author }}</p>
-                <p v-if="popupContent.keywords">Keywords: {{ popupContent.keywords.join(', ') }}</p>
-                <button id="cancel-button"  @click="hidePopup">Cancel</button>
-            </div>
-        </div>
     </div>
     <div id="disclaimer">
     	SmartFileLibrary - This project is in active devlopment.
@@ -135,7 +220,7 @@
         <a id="status-disclaimer-text">Server running</a>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>-
     <!--<script src="bootstrap.bundle.min.js.js"></script>-->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <!--<script src="vue.js.js"></script>-->

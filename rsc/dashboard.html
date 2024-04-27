@@ -42,13 +42,13 @@
             <hr>
             <ul class="nav nav-pills flex-column mb-auto">
               <li class="nav-item">
-                <a onclick="doswitch()" href="index.html" class="nav-link active" aria-current="page">
+                <a onclick="doswitch()" href="index.html" class="nav-link text-black" aria-current="page">
                   <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#home"/></svg>
                   Home
                 </a>
               </li>
               <li>
-                <a onclick="doswitch()" href="dashboard.html" class="nav-link text-black">
+                <a onclick="doswitch()" href="dashboard.html" class="nav-link active">
                   <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#speedometer2"/></svg>
                   Dashboard
                 </a>
@@ -99,32 +99,19 @@
             <path fill-rule="evenodd" d="M2.5 11.5A.5.5 0 0 1 3 11h10a.5.5 0 0 1 0 1H2a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 7h10a.5.5 0 0 1 0 1H2a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 3h10a.5.5 0 0 1 0 1H2a.5.5 0 0 1-.5-.5z"/>
           </svg>
         </button>
-        <div id="query-box">
-            <select id="form-dropdown" v-model="type">
-                <option value="all">All</option>
-                <option value="book">Book</option>
-                <option value="website">Website</option>
-                <option value="data">Dataset</option>
-                <option value="code">Code</option>
-                <option value="collection">Collection</option>
-                <option value="research article">Research Article</option>
-            </select>
-            <input v-model="query" @keyup.enter="displayResults" type="text" id="query-input" placeholder="Enter your keyword or '*' for wildcard">
-            <button @click="displayResults">🔍</button>
+        <div id="page-info-container">
+          <div id="page-info-padding"></div>
+          <div id="page-info-content">
+            <br>
+            <h1><b> Dashboard </b></h1>
+            <b> This page is still in development. Please stand by or contribute to the project! </b>
+            <hr>
+            
+          </div>
+          <div id="page-info-padding-right"></div>
+            
         </div>
         
-        <div id="results-container">
-            <resultentry class="result-entry" v-for="entry in results" :entry="entry" :favourites="favourites" :key="entry.id" @toggle-favourite="toggleFavourite" @display-popup="displayPopup"></resultentry>
-        </div>
-        
-        <div id="popup" v-if="popupVisible" class="popup">
-            <div id="popup-content">
-                <h2>{{ popupContent.title }}</h2>
-                <p>Author: {{ popupContent.author }}</p>
-                <p v-if="popupContent.keywords">Keywords: {{ popupContent.keywords.join(', ') }}</p>
-                <button id="cancel-button"  @click="hidePopup">Cancel</button>
-            </div>
-        </div>
     </div>
     <div id="disclaimer">
     	SmartFileLibrary - This project is in active devlopment.
@@ -135,7 +122,7 @@
         <a id="status-disclaimer-text">Server running</a>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>-
     <!--<script src="bootstrap.bundle.min.js.js"></script>-->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <!--<script src="vue.js.js"></script>-->
