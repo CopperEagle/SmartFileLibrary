@@ -384,22 +384,17 @@ class DatabaseInterface:
 		self.subtopic('Naval', 'Naval Traffic')
 		self.subtopic('Airspace', 'Air Traffic')
 
-	def preview_all(self, filesdir : str, pub : str, 
-		to_file : str = "preview_db.py", fetch_metadb : bool = True):
+	def preview_all(self, filesdir : str,  to_file : str = "preview_db.py"):
 		"""Try to automatically generate the entries into the DB, given some file directory.
-		WIll not make any changes to the DB, instead will preview all changes into a
+		Will not make any changes to the DB, instead will preview all changes into a
 		Python file.
 
 		Parameters
 		-----------
 		filesdir : str
 			The directory of the files.
-		pub : str
-			The publisher name of the files in the directory.
 		to_file : str
 			The filepath where the preview will be saved.
-		fetch_metadb : bool
-			Whether to try to fetch the metadata DB from crossref.
 		"""
 		if (self.md_extractor is None):
 			raise ValueError("Must set metadata extraction method first before calling preview_all")
