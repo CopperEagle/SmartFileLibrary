@@ -37,7 +37,6 @@ The project is ongoing. Some features are still in development.
 The project is written for Linux, Python 3.10+ and has a number of additional requirements
 
 - PostgreSQL 14.11
-- (optionally, see below) a text-to-text model from Huggingface to generate keywords
 
 Optionally, you may setup a virtual environment.
 
