@@ -16,8 +16,8 @@ For now, these two components are seperated and may be done with different or th
 Currently, the project supports three options. Recommended is option 3.
 
 - Option `PDFMETA`: Inference using the metadata of the pdf file and optionally the `crossref` database. This option takes as arguments whether `crossref` should be used and the publisher name.
-- Option DONUTFT: Inference using a document question and answer AI model, [this one](https://huggingface.co/naver-clova-ix/donut-base-finetuned-docvqa).
-- Option MOONDREAM2: Using the moondream2 model. Requirements are no less than 8GB RAM.
+- Option `DONUTFT`: Inference using a document question and answer AI model, [this one](https://huggingface.co/naver-clova-ix/donut-base-finetuned-docvqa).
+- Option `MOONDREAM2`: Using the moondream2 model. Requirements are no less than 8GB RAM.
 
 ```py
 from smartfilelibrary import DatabaseInterface
@@ -52,7 +52,7 @@ Note, to use the `crossref` database: **The assumption currently is that the fil
 ## The keyword inference
 All that is needed is a single line, indicating the method to use. Currently, only one option exists.
 
-T5DERIVATIVE: A derivative of Google's T5. Retreives the keywords from the title.
+`T5DERIVATIVE`: A derivative of Google's T5. Retreives the keywords from the title.
 
 Work is ongoing to support other models and also APIs like the one for ChatGPT.
 
