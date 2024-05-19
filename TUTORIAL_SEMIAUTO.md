@@ -49,7 +49,7 @@ db.finish()
 
 Note, to use the `crossref` database: **The assumption currently is that the file's name is its own ISBN.** It can then retreive the actual title, publishing year, etc.
 
-## The keyword inference
+## The keyword inference (optional)
 All that is needed is a single line, indicating the method to use. Currently, only one option exists.
 
 `T5DERIVATIVE`: A derivative of Google's T5. Retreives the keywords from the title.
