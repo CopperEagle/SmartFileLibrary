@@ -8,6 +8,7 @@ from .utilities import get_books, write_actions_to_db
 from .analyzers.donut_base_finetuned import DonutAnalyzer
 from .analyzers.pdfmetaanalyzer import PdfMetaAnalyzer
 from .analyzers.moondream2 import Moondream2
+from .keywordinference.t5derivative import T5Derivative
 
 import psycopg2
 try:
@@ -55,6 +56,9 @@ class DatabaseInterface:
 			2: DonutAnalyzer,
 			3: Moondream2
 		}
+		self.keywords_methods = {
+			1 : T5Derivative
+		}
 		self.md_extractor = None
 
 
@@ -88,7 +92,7 @@ class DatabaseInterface:
 		# use donut model
 		set_metadata_method(2)
 		"""
-		if method not in (1, 2, 3):
+		if method not in self.metadata_extraction_methods.keys():
 			raise ValueError(f"Bad metadata method extractor {method}. Check documentation.")
 		self.md_extractor = self.metadata_extraction_methods[method](**kwargs)
 		self.md_extractor.load()
@@ -408,26 +412,20 @@ class DatabaseInterface:
 	def _chat(self, inp : str):
 		return ""
 
-	def set_keywords_model(self, model : str, tokenizer : str):
-		"""Set the location of the model used to generate the keywords.
-		See the tutorial for more information.
+	def set_keywords_model(self, method : int):
+		"""Set the method to use for keyword inference.
 
 		Parameters
 		-----------
-		model : str
-			The location of the model.
-		tokenizer : str
-			The location of the tokenizer.
+		method : int
+			1: Extract keywords from the title, using a derivative from 
+				Google's T5 model ( less than 8GB RAM required)
+			Will soon add ChatGPT, etc. 
 		"""
-		print(f"[Info] Loading model at {model}.")
-		model = pipeline(task= 'text2text-generation', 
-		    model=model, tokenizer=tokenizer)
-		print(f"[Info] Done loading model!")
-
-		def chat(self, inp : str):
-		    return model(inp, max_length=self.MAXOUTPUTLENGTH, do_sample=True)[0]['generated_text']
-		self._chat = chat
-
+		if method not in self.keywords_methods:
+			raise ValueError("Unknown value for keyword extraction.")
+		self._chat = self.keywords_methods[method](**kwargs).get_keywords
+		
 	SQLSETUP = """
 CREATE TABLE Publisher(
 	pub_id SERIAL PRIMARY KEY, 
