@@ -7,6 +7,7 @@ from typing import Collection
 from .utilities import get_books, write_actions_to_db
 from .analyzers.donut_base_finetuned import DonutAnalyzer
 from .analyzers.pdfmetaanalyzer import PdfMetaAnalyzer
+from .analyzers.moondream2 import Moondream2
 
 import psycopg2
 try:
@@ -51,7 +52,8 @@ class DatabaseInterface:
 		self.logfile = "locallog.txt"
 		self.metadata_extraction_methods = {
 			1: PdfMetaAnalyzer,
-			2: DonutAnalyzer
+			2: DonutAnalyzer,
+			3: Moondream2
 		}
 		self.md_extractor = None
 
@@ -74,8 +76,9 @@ class DatabaseInterface:
 		Parameter:
 		-----------
 		method: int
-			Either 1 for using the metadata of the file itself (analyzers.PdfMetaAnalyzer)
-			or 2 for using a donut AI model (analyzers.DonutAnalyzer).
+			1 for using the metadata of the file itself (analyzers.PdfMetaAnalyzer)
+			2 for using a donut AI model (analyzers.DonutAnalyzer)
+			3 for using the Moondream2 AI model. (recommended, min 8GB RAM recommended)
 
 		Examples:
 		------------
@@ -85,7 +88,7 @@ class DatabaseInterface:
 		# use donut model
 		set_metadata_method(2)
 		"""
-		if method not in (1, 2):
+		if method not in (1, 2, 3):
 			raise ValueError(f"Bad metadata method extractor {method}. Check documentation.")
 		self.md_extractor = self.metadata_extraction_methods[method](**kwargs)
 		self.md_extractor.load()

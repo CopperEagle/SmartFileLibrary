@@ -6,3 +6,4 @@ torch
 transformers
 pymupdf
 pillow
+einops
