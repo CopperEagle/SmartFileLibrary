@@ -1,0 +1,3 @@
+smartfilelibrary-frontend/node_modules/*
+smartfilelibrary-frontend/.vscode
+smartfilelibrary-frontend/.gitignore
