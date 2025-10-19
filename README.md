@@ -11,8 +11,6 @@ SmartFileLibrary is is an digital library, backed by a local database hosted by 
 
 To strengthen privacy, the project strives to always offer local compute options.
 
-**NOTE:** The frontend of SmartFileLibrary is currently being rewritten to make fully use of vue and its SFC (single file component) feature. For the time being, it is in the frontend subdirectory, but it will be moved over to its own repository in due time.
-
 ![Screenshot of the experimental webinterface](rsc/screenshot_chrome.png)
 
 
